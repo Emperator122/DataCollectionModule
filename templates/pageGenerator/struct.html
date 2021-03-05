@@ -1,0 +1,68 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<link id="csssrc" rel="stylesheet" type="text/css" href="/sveden/styles.css">
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="cache-control" content="0">
+<title>Структура и органы управления образовательной организацией</title>
+</head>
+<body>
+<div id="outcontainer">
+<div id="topheader"><a href="javascript:chovz()" itemprop="copy" id="ovz" class="ovz">Версия для слабовидящих</a></div>
+<div id="container">
+<div id="container_menu">
+<div class="menu"><a class="menu" href="/" style="font-size: larger">Главная страница</a></div><hr>
+<div class="menu"><a class="menu" href="/sveden/common/" onclick="go(this)">Основные сведения</a></div>
+<div class="menu-select">Структура и органы управления образовательной организацией</div>
+<div class="menu"><a class="menu" href="/sveden/document/" onclick="go(this)">Документы</a></div>
+<div class="menu"><a class="menu" href="/sveden/education/" onclick="go(this)">Образование</a></div>
+<div class="menu"><a class="menu" href="/sveden/eduStandarts/" onclick="go(this)">Образовательные стандарты</a></div>
+<div class="menu"><a class="menu" href="/sveden/employees/" onclick="go(this)">Руководство. Педагогический (научно-педагогический) состав</a></div>
+<div class="menu"><a class="menu" href="/sveden/objects/" onclick="go(this)">Материально-техническое обеспечение образовательного процесса</a></div>
+<div class="menu"><a class="menu" href="/sveden/grants/" onclick="go(this)">Стипендии и иные виды материальной поддержки</a></div>
+<div class="menu"><a class="menu" href="/sveden/paid_edu/" onclick="go(this)">Платные образовательные услуги</a></div>
+<div class="menu"><a class="menu" href="/sveden/budget/" onclick="go(this)">Финансово-хозяйственная деятельность</a></div>
+<div class="menu"><a class="menu" href="/sveden/vacant/" onclick="go(this)">Вакантные места для приема (перевода)</a></div>
+<div class="menu"><a class="menu" href="/sveden/ovz/" onclick="go(this)">Доступная среда</a></div>
+<div class="menu"><a class="menu" href="/sveden/inter/" onclick="go(this)">Международное сотрудничество</a></div>
+</div>
+<div id="container_content">
+<div style="padding: 30px">
+<h1>Структура и органы управления образовательной организацией</h1>
+    <table>
+    <tr><td>Наименование структурного подразделения (органа управления)</td><td>Фамилия, имя, отчество руководителя структурного подразделения (органа управления)</td><td>Должность руководителя структурного подразделения (органа управления)</td><td>Место нахождения структурного подразделения (органа управления)</td><td>Адрес официального сайта в сети "Интернет" структурного подразделения (органа управления)</td><td>Адреса электронной почты структурных подразделений</td><td>Положение о структурном подразделении (об органе управления)</td></tr>
+        {% for structOrgUprav_single in meta.structOrgUprav %}
+            <tr itemprop="structOrgUprav">
+                <td itemprop="name">{{ structOrgUprav_single.children.name.value }}</td>
+                <td itemprop="fio">{{ structOrgUprav_single.children.fio.value }}</td>
+                <td itemprop="post">{{ structOrgUprav_single.children.post.value }}</td>
+                <td itemprop="addressStr">{{ structOrgUprav_single.children.addressStr.value }}</td>
+                <td itemprop="site">{{ structOrgUprav_single.children.site.value }}</td>
+                <td itemprop="email">{{ structOrgUprav_single.children.email.value }}</td>
+                <td><a href="{{ structOrgUprav_single.children.divisionClauseDocLink.href }}" target="_blank"
+                       itemprop="divisionClauseDocLink">{{ structOrgUprav_single.children.divisionClauseDocLink.value }}</a><br></td>
+            </tr>
+        {% endfor %}
+    </table>
+</div>
+</div>
+</div>
+<div id="footer">&copy; 2021 Федеральное государственное бюджетное образовательное учреждение высшего образования "Северо-Осетинская государственная медицинская академия" Министерства здравоохранения Российской Федерации</div>
+</div>
+<script language="JavaScript">
+window.onload=checkContHeight;
+window.onresize=checkContHeight;
+var ovz_href='';
+if(window.location.search=='?sv=1'){changecss(true);}
+function changecss(flag){var css_cont=document.getElementById('csssrc');var ovz_cont=document.getElementById('ovz');
+if(flag){css_cont.href='/sveden/styles_ovz.css';ovz_cont.innerHTML='Обычная версия';ovz_href='?sv=1';checkContHeight();}else{css_cont.href='/sveden/styles.css';ovz_cont.innerHTML='Версия для слабовидящих';ovz_href='';checkContHeight();}}
+function checkContHeight(){var container=document.getElementById('container');var container_menu=document.getElementById('container_menu');var container_content=document.getElementById('container_content');
+if(ovz_href=='?sv=1'){container.style.height=(document.body.clientHeight-69).toString()+'px';container_menu.style.height=(document.body.clientHeight-69).toString()+'px';container_content.style.height=(document.body.clientHeight-69).toString()+'px';}
+else{container.style.height=(document.body.clientHeight-54).toString()+'px';container_menu.style.height=(document.body.clientHeight-54).toString()+'px';container_content.style.height=(document.body.clientHeight-54).toString()+'px';}}
+function chovz(){if(ovz_href=='?sv=1'){changecss(false);}else{changecss(true);}}
+function go(aobj){aobj.href=aobj.href+ovz_href;}
+function sh(obj){if(typeof obj==='object')if(obj.style.display=='none')obj.style.display='block';else obj.style.display='none';}
+</script>
+</body>
+</html>
