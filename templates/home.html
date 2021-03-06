@@ -48,7 +48,7 @@
             <div id="collapseCommon" class="accordion-collapse collapse" aria-labelledby="headingCommon"
                  data-bs-parent="#accordionExample">
                 <div class="accordion-body">
-                    {{ common_form }}
+
                 </div>
             </div>
         </div>
@@ -83,6 +83,7 @@
                                 <tbody>
                                 {% for form in struct_formset %}
                                     <tr class="struct-row">
+                                        {{ form.id }}
                                         <td>{{ form.name|add_class:"form-control" }}</td>
                                         <td>{{ form.fio|add_class:"form-control" }}</td>
                                         <td>{{ form.post|add_class:"form-control" }}</td>
@@ -90,9 +91,15 @@
                                         <td class="col-1">{{ form.site|add_class:"form-control" }}</td>
                                         <td class="col-1">{{ form.email|add_class:"form-control" }}</td>
                                         <td class="col-2">{{ form.divisionClauseDocLink|add_class:"form-control" }}</td>
+                                        <!--<td class="col-2">{{ form.divisionClauseDocLinkFileNames|add_class:"form-control" }}</td>-->
                                         <td>
-                                            <button group_class="struct-row" class="btn btn-success add-form-row">+
-                                            </button>
+                                            {% if forloop.last %}
+                                                <button group_class="struct-row" class="btn btn-success add-form-row">+
+                                                </button>
+                                            {% else %}
+                                                <button group_class="struct-row" class="btn btn-danger remove-form-row">-
+                                                </button>
+                                            {% endif %}
                                         </td>
                                     </tr>
                                 {% endfor %}

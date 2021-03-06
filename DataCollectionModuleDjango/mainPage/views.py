@@ -5,16 +5,20 @@ import django.shortcuts as sh
 from django.utils.datastructures import MultiValueDict
 
 from .forms import StructForm
+from .models import Struct
 from .forms import CommonForm
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.files.storage import FileSystemStorage
 import django.contrib.auth as auth
 import os
-from django.forms import formset_factory
+from django.forms import modelformset_factory
 
 
 def home_page(request):
-    struct_formset_obj = formset_factory(StructForm)
+    if not request.user.is_authenticated:
+        return sh.redirect('/login')
+    struct_objects = Struct.objects.filter(owner=request.user)
+    struct_formset_obj = modelformset_factory(Struct, form=StructForm, extra=0 if len(struct_objects) > 0 else 1)
 
     # Если на сервер отправил данные авторизованный пользователь
     if request.method == 'POST' and request.user.is_authenticated:
@@ -29,20 +33,25 @@ def home_page(request):
             "structOrgUprav": []
         }}
         if struct_formset.is_valid():
+            Struct.objects.filter(owner=request.user).delete()
             for f in struct_formset:  # Для каждой формы в наборе
                 # Получим чистые данные
                 form_data = f.cleaned_data
 
                 # Загрузим файл на сервер
-                division_clause_doc_link = handle_uploaded_file(form_data.get("divisionClauseDocLink"),
-                                                                request.user.username)
+                division_clause_doc_link = handle_uploaded_files(form_data.get("divisionClauseDocLink"),
+                                                                 request.user.username)
+                saved_struct: Struct = f.save(commit=False)
+                saved_struct.owner = request.user
+                saved_struct.divisionClauseDocLinkFileNames = division_clause_doc_link
+                saved_struct.save()
 
                 # Добавим данные в контекст на основе переданных полей
                 struct_context["meta"]["structOrgUprav"].append({
                     "children": {
                         "name": {
-                                "value": form_data.get("name")
-                            },
+                            "value": form_data.get("name")
+                        },
                         "fio": {
                             "value": form_data.get("fio")
                         },
@@ -59,7 +68,7 @@ def home_page(request):
                             "value": form_data.get("email")
                         },
                         "divisionClauseDocLink": {
-                            "href": os.path.join("..", "files", division_clause_doc_link),
+                            "href": os.path.join("..", "files", division_clause_doc_link[0] if len(division_clause_doc_link) > 0 else ''),
                             "value": "Ссылка"
                         },
                     }
@@ -69,9 +78,9 @@ def home_page(request):
         html = render_to_string("pageGenerator/struct.html", context=struct_context)
 
         # Сохраняем их в соотвествующую папку
-        fs = FileSystemStorage("fileStore/"+request.user.username)
+        fs = FileSystemStorage("fileStore/" + request.user.username)
         os.mkdir(os.path.join(fs.location, "struct"))
-        with fs.open(os.path.join(fs.location, "structOrgUprav", "index.html"), 'wb') as destination:
+        with fs.open(os.path.join(fs.location, "struct", "index.html"), 'wb') as destination:
             destination.write(html.encode('utf-8'))
 
         return sh.redirect('/')
@@ -82,7 +91,7 @@ def home_page(request):
     else:
         user = None
 
-    struct_formset = struct_formset_obj(prefix="struct")
+    struct_formset = struct_formset_obj(prefix="struct", queryset=struct_objects)
     common_form = CommonForm(prefix="common")
 
     return sh.render(request, "home.html", context={
@@ -134,7 +143,15 @@ def clear_user_storage(user_id):
     os.mkdir(os.path.join(fs.location, user_id, "files"))  # Затем пересоздаем директорию пользователя
 
 
-def handle_uploaded_files(red_files: MultiValueDict, user_id):
+def handle_uploaded_files(files_list, user_id):
+    names = []
+    for file in files_list:
+        name = handle_uploaded_file(file, user_id)
+        names.append(name)
+    return names
+
+
+def handle_uploaded_files_(red_files: MultiValueDict, user_id):
     names = []
     # Сохраняем загруженные файлы
     for key in red_files:
@@ -146,9 +163,8 @@ def handle_uploaded_files(red_files: MultiValueDict, user_id):
 
 
 def handle_uploaded_file(f: UploadedFile, user_id):
-
     # Экземпляр FileSystemStorage
-    fs = FileSystemStorage('fileStore/'+user_id+"/files")
+    fs = FileSystemStorage('fileStore/' + user_id + "/files")
 
     # Получаем доступное имя файла
     name = fs.get_available_name(f.name)

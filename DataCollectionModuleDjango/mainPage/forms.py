@@ -1,45 +1,29 @@
 from django import forms
+from DataCollectionModuleDjango.mainPage.models import Struct
+from .widgets import ClearableMultipleFilesInput
+from .widgets import MultipleFilesField
 
 
 # Структура и органы упрвавления образовательной организацией (использовать как set)
-class StructForm(forms.Form):
-    name = forms.CharField(
-        label="Наименование",
-        required=True,
-        widget=forms.TextInput())
-    fio = forms.CharField(
-        label="Фамилия, имя, отчество руководителя",
-        required=False,
-        widget=forms.TextInput())
-    post = forms.CharField(
-        label="Должность руководителя",
-        required=False,
-        widget=forms.TextInput())
-    addressStr = forms.CharField(
-        label="Место нахождения",
-        required=False,
-        widget=forms.TextInput())
-    site = forms.CharField(
-        label="Адрес официального сайта в сети \"Интернет\"",
-        required=False,
-        widget=forms.TextInput())
-    email = forms.CharField(
-        label="Адреса электронной почты",
-        required=False,
-        widget=forms.TextInput())
+class StructForm(forms.ModelForm):
+    class Meta:
+        model = Struct
+        exclude = ['owner']
+        labels = {
+            "name": "Наименование",
+            "fio": "Фамилия, имя, отчество руководителя",
+            "post": "Должность руководителя",
+            "addressStr": "Место нахождения",
+            "site": "Адрес официального сайта в сети \"Интернет\"",
+            "email": "Адреса электронной почты",
+            "divisionClauseDocLink": "Положение о структурном подразделении"
+        }
 
-    divisionClauseDocLink = forms.FileField(label='Положение о структурном подразделении', required=True,
-                                            widget=forms.FileInput(attrs={
-                                                "required": "required"
-                                            }))
-    # filesField = forms.FileField(
-    #     label='Выберите файлы',
-    #     widget=forms.FileInput(
-    #         attrs={
-    #             'multiple': True
-    #         }
-    #     )
-    # )
+    divisionClauseDocLink = MultipleFilesField(label='Положение о структурном подразделении', required=True,
+                                               widget=ClearableMultipleFilesInput(attrs={
+                                                   "required": "required",
+                                                   "multiple": True
+                                               }))
 
 
 # Основные сведения (использовать отдельно)
@@ -156,7 +140,7 @@ class RepInfoForm(forms.Form):
 
 # Обазование ->
 #               Информация о сроке действия государственной аккредитации образовательной программы,
-#               о языках, на которых осуществляется образование (обучение)
+#               о языках, на которых осуществляется образование (обучение) (set)
 class EduAccredForm(forms.Form):
     eduCode = forms.CharField(
         label="Код специальности, направления подготовки",
@@ -184,5 +168,128 @@ class EduAccredForm(forms.Form):
         widget=forms.TextInput())
     language = forms.CharField(
         label="Языки, на которых осуществляется образование",
+        required=True,
+        widget=forms.TextInput())
+
+
+# Обазование -> Информация по образовательным программам (set)
+class EduOpForm(forms.Form):
+    eduCode = forms.CharField(
+        label="Код специальности, направления подготовки",
+        required=True,
+        widget=forms.TextInput())
+    eduName = forms.CharField(
+        label="Наименование",
+        required=True,
+        widget=forms.TextInput())
+    eduLevel = forms.CharField(
+        label="Уровень образования",
+        required=True,
+        widget=forms.TextInput())
+    eduForm = forms.CharField(
+        label="Форма обучения",
+        required=True,
+        widget=forms.TextInput())
+    opMain = forms.FileField(
+        label="Ссылка на описание образовательной программы с приложением ее копии",
+        widget=forms.FileInput(
+            attrs={
+                'multiple': True
+            }
+        )
+    )
+    educationPlan = forms.FileField(
+        label="Ссылка на учебный план",
+        widget=forms.FileInput(
+            attrs={
+                'multiple': True
+            }
+        )
+    )
+    educationAnnotation = forms.FileField(
+        label="Ссылки на аннотации к рабочим программам дисциплин (по каждой дисциплине в составе образовательной "
+              "программы)",
+        widget=forms.FileInput(
+            attrs={
+                'multiple': True
+            }
+        )
+    )
+    educationShedule = forms.FileField(
+        label="Ссылка на календарный учебный график",
+        widget=forms.FileInput(
+            attrs={
+                'multiple': True
+            }
+        )
+    )
+    methodology = forms.FileField(
+        label="Ссылка на методические и иные документы, разработанные образовательной организацией для обеспечения "
+              "образовательного процесса",
+        widget=forms.FileInput(
+            attrs={
+                'multiple': True
+            }
+        )
+    )
+    eduPr = forms.FileField(
+        label="Ссылка на рабочие программы практик, предусмотренных соответствующей образовательной программой",
+        widget=forms.FileInput(
+            attrs={
+                'multiple': True
+            }
+        )
+    )
+    eduEl = forms.FileField(
+        label="Использование при реализации образовательных программ электронного обучения и дистанционных "
+              "образовательных технологий",
+        widget=forms.FileInput(
+            attrs={
+                'multiple': True
+            }
+        )
+    )
+    isAdapted = forms.BooleanField(label="Адаптированная программа")
+
+
+# Образование -> Информация о численности обучающихся за счет бюджетных ассигнований федерального бюджета,
+# бюджетов субъектов Российской Федерации, местных бюджетов, по договорам об образовании за счет средств физических и
+# (или) юридических лиц (set)
+class EduChislenForm(forms.Form):
+    eduCode = forms.CharField(
+        label="Код специальности, направления подготовки",
+        required=True,
+        widget=forms.TextInput())
+    eduName = forms.CharField(
+        label="Наименование профессии, специальности, направления подготовки",
+        required=True,
+        widget=forms.TextInput())
+    eduLevel = forms.CharField(
+        label="Уровень образования",
+        required=True,
+        widget=forms.TextInput())
+    eduForm = forms.CharField(
+        label="Форма обучения",
+        required=True,
+        widget=forms.TextInput())
+    numberBFpriem = forms.CharField(
+        label="бюджетных ассигнований федерального бюджета ",
+        required=True,
+        widget=forms.TextInput())
+    # Численность обучающихся за счет (количество человек)
+    numberBRpriem = forms.CharField(
+        label="бюджетов субъектов Российской Федерации",
+        required=True,
+        widget=forms.TextInput())
+    numberBMpriem = forms.CharField(
+        label="местных бюджетов",
+        required=True,
+        widget=forms.TextInput())
+    numberPpriem = forms.CharField(
+        label="средств физических и (или) юридических лиц",
+        required=True,
+        widget=forms.TextInput())
+    numberF = forms.CharField(
+        label="Численность обучающихся, являющихся иностранными гражданами",
         required=True,
         widget=forms.TextInput())
