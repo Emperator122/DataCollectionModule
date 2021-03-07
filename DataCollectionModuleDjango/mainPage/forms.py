@@ -2,6 +2,8 @@ from django import forms
 from DataCollectionModuleDjango.mainPage.models import Struct
 from .widgets import ClearableMultipleFilesInput
 from .widgets import MultipleFilesField
+from django.contrib.auth.models import User
+import DataCollectionModuleDjango.mainPage.utils.file_manager as fm
 
 
 # Структура и органы упрвавления образовательной организацией (использовать как set)
@@ -24,6 +26,14 @@ class StructForm(forms.ModelForm):
                                                    "required": "required",
                                                    "multiple": True
                                                }))
+
+    def save(self, *args, **kwargs):
+        struct: Struct = super().save(commit=False)
+        user: User = kwargs.pop('user', None)
+        struct.owner = user
+        files = fm.handle_uploaded_files(self.cleaned_data.get("divisionClauseDocLink"), user.username)
+        self.cleaned_data["divisionClauseDocLinkFileNames"] = files
+        struct.save(self, *args, **kwargs)
 
 
 # Основные сведения (использовать отдельно)

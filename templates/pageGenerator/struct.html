@@ -32,16 +32,19 @@
 <h1>Структура и органы управления образовательной организацией</h1>
     <table>
     <tr><td>Наименование структурного подразделения (органа управления)</td><td>Фамилия, имя, отчество руководителя структурного подразделения (органа управления)</td><td>Должность руководителя структурного подразделения (органа управления)</td><td>Место нахождения структурного подразделения (органа управления)</td><td>Адрес официального сайта в сети "Интернет" структурного подразделения (органа управления)</td><td>Адреса электронной почты структурных подразделений</td><td>Положение о структурном подразделении (об органе управления)</td></tr>
-        {% for structOrgUprav_single in meta.structOrgUprav %}
+        {% for structOrgUprav_single in structOrgUprav_formset %}
             <tr itemprop="structOrgUprav">
-                <td itemprop="name">{{ structOrgUprav_single.children.name.value }}</td>
-                <td itemprop="fio">{{ structOrgUprav_single.children.fio.value }}</td>
-                <td itemprop="post">{{ structOrgUprav_single.children.post.value }}</td>
-                <td itemprop="addressStr">{{ structOrgUprav_single.children.addressStr.value }}</td>
-                <td itemprop="site">{{ structOrgUprav_single.children.site.value }}</td>
-                <td itemprop="email">{{ structOrgUprav_single.children.email.value }}</td>
-                <td><a href="{{ structOrgUprav_single.children.divisionClauseDocLink.href }}" target="_blank"
-                       itemprop="divisionClauseDocLink">{{ structOrgUprav_single.children.divisionClauseDocLink.value }}</a><br></td>
+                <td itemprop="name">{{ structOrgUprav_single.cleaned_data.name }}</td>
+                <td itemprop="fio">{{ structOrgUprav_single.cleaned_data.fio }}</td>
+                <td itemprop="post">{{ structOrgUprav_single.cleaned_data.post }}</td>
+                <td itemprop="addressStr">{{ structOrgUprav_single.cleaned_data.addressStr }}</td>
+                <td itemprop="site">{{ structOrgUprav_single.cleaned_data.site }}</td>
+                <td itemprop="email">{{ structOrgUprav_single.cleaned_data.email }}</td>
+                <td>
+                    {% for link in structOrgUprav_single.cleaned_data.divisionClauseDocLinkFileNames %}
+                        <p><a href="../files/{{ link }}" target="_blank" itemprop="divisionClauseDocLink">Ссылка</a><br></p>
+                    {% endfor %}
+                </td>
             </tr>
         {% endfor %}
     </table>

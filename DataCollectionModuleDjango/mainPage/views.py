@@ -1,16 +1,16 @@
-from django.core.files.uploadedfile import UploadedFile
 from django.template.loader import render_to_string
 from django.http import HttpResponse
 import django.shortcuts as sh
-from django.utils.datastructures import MultiValueDict
 
 from .forms import StructForm
 from .models import Struct
 from .forms import CommonForm
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.files.storage import FileSystemStorage
+import DataCollectionModuleDjango.mainPage.utils.file_manager as fm
 import django.contrib.auth as auth
 import os
+import DataCollectionModuleDjango.mainPage.utils.page_generator as pg
 from django.forms import modelformset_factory
 
 
@@ -23,67 +23,20 @@ def home_page(request):
     # Если на сервер отправил данные авторизованный пользователь
     if request.method == 'POST' and request.user.is_authenticated:
         # Очищаем его хранилище
-        clear_user_storage(request.user.username)
+        fm.clear_user_storage(request.user.username)
 
         # Генерация раздела структура органов управления
         struct_formset = struct_formset_obj(prefix="struct", data=request.POST, files=request.FILES)  # Данные с формы
-
-        # Генерация конктекса для передачи в template
-        struct_context = {"meta": {
-            "structOrgUprav": []
-        }}
         if struct_formset.is_valid():
+            # Очищаем старые данные, введенные юзером
             Struct.objects.filter(owner=request.user).delete()
-            for f in struct_formset:  # Для каждой формы в наборе
-                # Получим чистые данные
-                form_data = f.cleaned_data
+            # Сохраняем каждую форму из набора на серв
+            for f in struct_formset:
+                f.save(user=request.user)
+            # Сохраняем данные
+            pg.StructPageGenerator(struct_formset).save_html(request.user)
 
-                # Загрузим файл на сервер
-                division_clause_doc_link = handle_uploaded_files(form_data.get("divisionClauseDocLink"),
-                                                                 request.user.username)
-                saved_struct: Struct = f.save(commit=False)
-                saved_struct.owner = request.user
-                saved_struct.divisionClauseDocLinkFileNames = division_clause_doc_link
-                saved_struct.save()
-
-                # Добавим данные в контекст на основе переданных полей
-                struct_context["meta"]["structOrgUprav"].append({
-                    "children": {
-                        "name": {
-                            "value": form_data.get("name")
-                        },
-                        "fio": {
-                            "value": form_data.get("fio")
-                        },
-                        "post": {
-                            "value": form_data.get("post")
-                        },
-                        "addressStr": {
-                            "value": form_data.get("addressStr")
-                        },
-                        "site": {
-                            "value": form_data.get("site")
-                        },
-                        "email": {
-                            "value": form_data.get("email")
-                        },
-                        "divisionClauseDocLink": {
-                            "href": os.path.join("..", "files", division_clause_doc_link[0] if len(division_clause_doc_link) > 0 else ''),
-                            "value": "Ссылка"
-                        },
-                    }
-                })
-
-        # Рендерим данные для html
-        html = render_to_string("pageGenerator/struct.html", context=struct_context)
-
-        # Сохраняем их в соотвествующую папку
-        fs = FileSystemStorage("fileStore/" + request.user.username)
-        os.mkdir(os.path.join(fs.location, "struct"))
-        with fs.open(os.path.join(fs.location, "struct", "index.html"), 'wb') as destination:
-            destination.write(html.encode('utf-8'))
-
-        return sh.redirect('/')
+            return sh.redirect('/')
 
     is_logged_in = request.user.is_authenticated
     if is_logged_in:
@@ -126,51 +79,3 @@ def logout(request):
     if request.user.is_authenticated:
         auth.logout(request)
     return sh.redirect('/')
-
-
-def clear_user_storage(user_id):
-    # Экземпляр FileSystemStorage
-    fs = FileSystemStorage("fileStore")
-    # Если пользователь когда-либо уже загружал файлы, то уничтожаем их...
-    if os.path.exists(fs.location + '/' + user_id):
-        for root, dirs, files in os.walk(fs.location + '/' + user_id, topdown=False):
-            for name in files:
-                os.remove(os.path.join(root, name))
-            for name in dirs:
-                os.rmdir(os.path.join(root, name))
-        os.rmdir(fs.location + '/' + user_id)  # ...вместе с директорией пользователя
-    os.mkdir(fs.location + '/' + user_id)  # Затем пересоздаем директорию пользователя
-    os.mkdir(os.path.join(fs.location, user_id, "files"))  # Затем пересоздаем директорию пользователя
-
-
-def handle_uploaded_files(files_list, user_id):
-    names = []
-    for file in files_list:
-        name = handle_uploaded_file(file, user_id)
-        names.append(name)
-    return names
-
-
-def handle_uploaded_files_(red_files: MultiValueDict, user_id):
-    names = []
-    # Сохраняем загруженные файлы
-    for key in red_files:
-        files_list = red_files.getlist(key)
-        for file in files_list:
-            name = handle_uploaded_file(file, user_id)
-            names.append(name)
-    return names
-
-
-def handle_uploaded_file(f: UploadedFile, user_id):
-    # Экземпляр FileSystemStorage
-    fs = FileSystemStorage('fileStore/' + user_id + "/files")
-
-    # Получаем доступное имя файла
-    name = fs.get_available_name(f.name)
-
-    # Записываем файл
-    with fs.open(name, 'wb') as destination:
-        for chunk in f.chunks():
-            destination.write(chunk)
-    return name
