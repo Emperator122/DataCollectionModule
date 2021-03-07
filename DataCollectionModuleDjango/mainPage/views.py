@@ -1,24 +1,22 @@
-from django.template.loader import render_to_string
 from django.http import HttpResponse
 import django.shortcuts as sh
-
-from .forms import StructForm
-from .models import Struct
-from .forms import CommonForm
 from django.contrib.auth.forms import AuthenticationForm
-from django.core.files.storage import FileSystemStorage
+import DataCollectionModuleDjango.mainPage.models as pg_models
+import DataCollectionModuleDjango.mainPage.forms as pg_forms
 import DataCollectionModuleDjango.mainPage.utils.file_manager as fm
 import django.contrib.auth as auth
-import os
 import DataCollectionModuleDjango.mainPage.utils.page_generator as pg
-from django.forms import modelformset_factory
 
 
 def home_page(request):
     if not request.user.is_authenticated:
         return sh.redirect('/login')
-    struct_objects = Struct.objects.filter(owner=request.user)
-    struct_formset_obj = modelformset_factory(Struct, form=StructForm, extra=0 if len(struct_objects) > 0 else 1)
+
+    struct_formset_obj = pg_forms.StructForm.get_formset(pg_models.Struct, pg_forms.StructForm)
+    common_formset_obj = pg_forms.CommonForm.get_formset(pg_models.Common, pg_forms.CommonForm)
+    uchred_law_formset_obj = pg_forms.UchredLawForm.get_formset(pg_models.UchredLaw, pg_forms.UchredLawForm)
+    fil_info_formset_obj = pg_forms.FilInfoForm.get_formset(pg_models.FilInfo, pg_forms.FilInfoForm)
+    rep_info_formset_obj = pg_forms.RepInfoForm.get_formset(pg_models.RepInfo, pg_forms.RepInfoForm)
 
     # Если на сервер отправил данные авторизованный пользователь
     if request.method == 'POST' and request.user.is_authenticated:
@@ -29,7 +27,7 @@ def home_page(request):
         struct_formset = struct_formset_obj(prefix="struct", data=request.POST, files=request.FILES)  # Данные с формы
         if struct_formset.is_valid():
             # Очищаем старые данные, введенные юзером
-            Struct.objects.filter(owner=request.user).delete()
+            struct_formset.get_queryset().delete()
             # Сохраняем каждую форму из набора на серв
             for f in struct_formset:
                 f.save(user=request.user)
@@ -44,8 +42,10 @@ def home_page(request):
     else:
         user = None
 
-    struct_formset = struct_formset_obj(prefix="struct", queryset=struct_objects)
-    common_form = CommonForm(prefix="common")
+    struct_formset = pg_forms.StructForm.get_owned_formset(request.user, pg_models.Struct, pg_forms.StructForm,
+                                                           prefix="struct")
+    common_form = pg_forms.CommonForm.get_owned_formset(request.user, pg_models.Struct, pg_forms.StructForm,
+                                                        prefix="common")
 
     return sh.render(request, "home.html", context={
         "arg1": "Emperator12",

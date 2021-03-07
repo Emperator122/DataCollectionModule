@@ -82,8 +82,8 @@
                                 </thead>
                                 <tbody>
                                 {% for form in struct_formset %}
+                                    {{ form.id }}
                                     <tr class="struct-row">
-                                        {{ form.id }}
                                         <td>{{ form.name|add_class:"form-control" }}</td>
                                         <td>{{ form.fio|add_class:"form-control" }}</td>
                                         <td>{{ form.post|add_class:"form-control" }}</td>

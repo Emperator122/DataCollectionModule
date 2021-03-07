@@ -1,15 +1,58 @@
 from django import forms
-from DataCollectionModuleDjango.mainPage.models import Struct
+from django.db import models
+import DataCollectionModuleDjango.mainPage.models as pageGenModels
 from .widgets import ClearableMultipleFilesInput
 from .widgets import MultipleFilesField
 from django.contrib.auth.models import User
 import DataCollectionModuleDjango.mainPage.utils.file_manager as fm
+from django.core.files.uploadedfile import UploadedFile
+
+
+# Модель с переписанным save для наследования от нее
+class OwnedModelForm(forms.ModelForm):
+    # Окончание идентефикатора поля в модели, соотвествующего полю загрузки из формы
+    # (т.е. если поле загрузки на форме divisionClauseDocLink, то JSON поле в модели
+    # будет именовиться divisionClauseDocLink+file_names_suffix (divisionClauseDocLinkFileNames)
+    file_names_suffix = "FileNames"
+
+    def save(self, *args, **kwargs):
+        model_obj = super().save(commit=False)  # получаем почти заполненный экземпляр модели (без эксклудов)
+        # заполняем поле "owner" переданным пользователем
+        user: User = kwargs.pop('user', None)
+        model_obj.owner = user
+        # загружаем данные на серв и заполняем JSON поле модели
+        for key, item in self.cleaned_data.items():
+            if isinstance(item, list) and any(isinstance(i, UploadedFile) for i in item):  # если item - list файлов
+                files = fm.handle_uploaded_files(item, user.username)  # загружаем файлы на серв
+                model_field_name = key + self.file_names_suffix
+                if hasattr(model_obj, model_field_name):  # если модель имеет необходимое поле, то заполняем его
+                    self.cleaned_data[model_field_name] = files  # и редачим чистые данные
+                    setattr(model_obj, model_field_name, files)
+
+        # Определяемся следует ли коммитить
+        commit_arg = kwargs.pop("commit", None)
+        if commit_arg is not None and not commit_arg:
+            return model_obj
+        model_obj.save(self)
+        return model_obj
+
+    @staticmethod  # вернет формсет из форм
+    def get_formset(model, form):
+        return forms.modelformset_factory(model=model, form=form, extra=0, min_num=1)
+
+    @staticmethod  # вернет формсет из форм принадлежащих юзеру, либо сет из одной формы
+    def get_owned_formset(user: User, model, form, **kwargs):
+        objects = kwargs.pop('owner', None)
+        if objects is None:
+            objects = model.objects.filter(owner=user)
+        formset = OwnedModelForm.get_formset(model, form)
+        return formset(queryset=objects, **kwargs)
 
 
 # Структура и органы упрвавления образовательной организацией (использовать как set)
-class StructForm(forms.ModelForm):
+class StructForm(OwnedModelForm):
     class Meta:
-        model = Struct
+        model = pageGenModels.Struct
         exclude = ['owner']
         labels = {
             "name": "Наименование",
@@ -27,127 +70,77 @@ class StructForm(forms.ModelForm):
                                                    "multiple": True
                                                }))
 
-    def save(self, *args, **kwargs):
-        struct: Struct = super().save(commit=False)
-        user: User = kwargs.pop('user', None)
-        struct.owner = user
-        files = fm.handle_uploaded_files(self.cleaned_data.get("divisionClauseDocLink"), user.username)
-        self.cleaned_data["divisionClauseDocLinkFileNames"] = files
-        struct.save(self, *args, **kwargs)
-
 
 # Основные сведения (использовать отдельно)
-class CommonForm(forms.Form):
-    name = forms.CharField(
-        label="Наименование образовательной организации",
-        required=True,
-        widget=forms.TextInput())
-    regDate = forms.DateField(required=True, label="Дата создания образовательной организации")
-    address = forms.CharField(
-        label="Адрес",
-        required=True,
-        widget=forms.TextInput())
-    workTime = forms.CharField(required=True, widget=forms.Textarea(), label="Режим, график работы")
-    telephone = forms.CharField(
-        label="Контактные телефоны",
-        required=True,
-        widget=forms.TextInput())
-    fax = forms.CharField(
-        label="Факсы",
-        required=True,
-        widget=forms.TextInput())
-    email = forms.CharField(
-        label="Адреса электронной почты",
-        required=True,
-        widget=forms.TextInput())
-    additionalInformation = forms.CharField(widget=forms.Textarea(), label="Дополнительная информация")
+class CommonForm(OwnedModelForm):
+    class Meta:
+        model = pageGenModels.Common
+        exclude = ['owner']
+        labels = {
+            "name": "Наименование образовательной организации",
+            "regDate": "Дата создания образовательной организации",
+            "address": "Адрес",
+            "workTime": "Режим, график работы",
+            "telephone": "Контактные телефоны",
+            "fax": "Факсы",
+            "email": "Адреса электронной почты",
+            "additionalInformation": "Дополнительная информация"
+        }
+        widgets = {
+            "workTime": forms.Textarea(),
+            "additionalInformation": forms.Textarea()
+        }
 
 
 # Основные сведения -> Информация об учередителях (использовать как set)
-class UchredLawForm(forms.Form):
-    nameUchred = forms.CharField(
-        label="Наименование учредителя",
-        required=True,
-        widget=forms.TextInput())
-    fullnameUchred = forms.CharField(
-        label="ФИО руководителя учредителя (учредителя)",
-        required=True,
-        widget=forms.TextInput())
-    addressUchred = forms.CharField(
-        label="Юридический адрес",
-        required=True,
-        widget=forms.TextInput())
-    telUchred = forms.CharField(
-        label="Контактные телефоны",
-        required=True,
-        widget=forms.TextInput())
-    mailUchred = forms.CharField(
-        label="Адрес электронной почты",
-        required=True,
-        widget=forms.TextInput())
-    websiteUchred = forms.CharField(
-        label="Адрес сайта учредителя в сети \"Интернет\"",
-        required=True,
-        widget=forms.TextInput())
-    isIndividual = forms.BooleanField(label="Учредитель - физ. лицо")
+class UchredLawForm(OwnedModelForm):
+    class Meta:
+        model = pageGenModels.UchredLaw
+        exclude = ['owner']
+        labels = {
+            "nameUchred": "Наименование учредителя",
+            "fullnameUchred": "ФИО руководителя учредителя (учредителя)",
+            "addressUchred": "Юридический адрес",
+            "telUchred": "Контактные телефоны",
+            "mailUchred": "Адрес электронной почты",
+            "websiteUchred": "Адрес сайта учредителя в сети \"Интернет\"",
+            "isIndividual": "Учредитель - физ. лицо"
+        }
 
 
-# Основные сведения -> Информация об филиалах (использовать как set)
-class FilInfoForm(forms.Form):
-    nameFil = forms.CharField(
-        label="Наименование",
-        required=True,
-        widget=forms.TextInput())
-    addressFil = forms.CharField(
-        label="Место нахождения",
-        required=True,
-        widget=forms.TextInput())
-    workTimeFil = forms.CharField(
-        label="Режим и график работы",
-        required=True,
-        widget=forms.TextInput())
-    telephoneFil = forms.CharField(
-        label="Контактные телефоны",
-        required=True,
-        widget=forms.TextInput())
-    emailFil = forms.CharField(
-        label="Адрес электронной почты",
-        required=True,
-        widget=forms.TextInput())
-    websiteFil = forms.CharField(
-        label="Адрес официального сайта в сети \"Интернет\"",
-        required=True,
-        widget=forms.TextInput())
+# Основные сведения -> Информация о филиалах (использовать как set)
+class FilInfoForm(OwnedModelForm):
+    class Meta:
+        model = pageGenModels.FilInfo
+        exclude = ['owner']
+        labels = {
+            "nameFil": "Наименование",
+            "addressFil": "Место нахождения",
+            "workTimeFil": "Режим и график работы",
+            "telephoneFil": "Контактные телефоны",
+            "emailFil": "Адрес электронной почты",
+            "websiteFil": "Адрес официального сайта в сети \"Интернет\""
+        }
 
 
 # Основные сведения -> Информация о представительствах (использовать как set)
-class RepInfoForm(forms.Form):
-    nameRep = forms.CharField(
-        label="Наименование",
-        required=True,
-        widget=forms.TextInput())
-    addressRep = forms.CharField(
-        label="Место нахождения",
-        required=True,
-        widget=forms.TextInput())
-    workTimeRep = forms.CharField(
-        label="Режим и график работы",
-        required=True,
-        widget=forms.TextInput())
-    telephoneRep = forms.CharField(
-        label="Контактные телефоны",
-        required=True,
-        widget=forms.TextInput())
-    emailRep = forms.CharField(
-        label="Адрес электронной почты",
-        required=True,
-        widget=forms.TextInput())
-    websiteRep = forms.CharField(
-        label="Адрес официального сайта в сети \"Интернет\"",
-        required=True,
-        widget=forms.TextInput())
+class RepInfoForm(OwnedModelForm):
+    class Meta:
+        model = pageGenModels.RepInfo
+        exclude = ['owner']
+        labels = {
+            "nameRep": "Наименование",
+            "addressRep": "Место нахождения",
+            "workTimeRep": "Режим и график работы",
+            "telephoneRep": "Контактные телефоны",
+            "emailRep": "Адрес электронной почты",
+            "websiteRep": "Адрес официального сайта в сети \"Интернет\""
+        }
 
 
+#
+# ОПИСАННЫЕ НИЖЕ ФОРМЫ НЕОБХОДИМО ПРИВЕСТИ К MODELFORM
+#
 # Обазование ->
 #               Информация о сроке действия государственной аккредитации образовательной программы,
 #               о языках, на которых осуществляется образование (обучение) (set)
