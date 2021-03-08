@@ -12,10 +12,6 @@ def home_page(request):
     if not request.user.is_authenticated:
         return sh.redirect('/login')
 
-    common_formset = pg_forms.CommonForm.get_formset_class(pg_models.Common, pg_forms.CommonForm)
-    uchred_law_formset = pg_forms.UchredLawForm.get_formset_class(pg_models.UchredLaw, pg_forms.UchredLawForm)
-    fil_info_formset = pg_forms.FilInfoForm.get_formset_class(pg_models.FilInfo, pg_forms.FilInfoForm)
-    rep_info_formset = pg_forms.RepInfoForm.get_formset_class(pg_models.RepInfo, pg_forms.RepInfoForm)
 
     # В случае POST запроса
     if request.method == 'POST':
@@ -33,12 +29,20 @@ def home_page(request):
         return sh.redirect('/')
 
     # В случае любого другого запроса
-    struct_page_generator = pg.StructPageGenerator(request.user)  # Генератор
-    user_struct_formset_obj = struct_page_generator.get_user_formsets()
+    struct_page_generator = pg.StructPageGenerator(request.user)  # Генератор раздела struct
+    user_struct_formset_obj, = struct_page_generator.get_user_formsets()
+
+    common_page_generator = pg.CommonPageGenerator(request.user)
+    common_fs_obj, uchred_law_fs_obj, fil_info_fs_obj, rep_info_fs_obj = common_page_generator.get_user_formsets()
 
     return sh.render(request, "home.html", context={
-            "arg1": "Emperator12",
             "struct_formset": user_struct_formset_obj,
+            "common": {
+                'common_formset': common_fs_obj,
+                'uchred_formset': uchred_law_fs_obj,
+                'fil_info_formset': fil_info_fs_obj,
+                'rep_info_formset': rep_info_fs_obj,
+            },
             'user': request.user,
         })
 

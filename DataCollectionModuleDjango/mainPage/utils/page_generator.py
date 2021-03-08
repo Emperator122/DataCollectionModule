@@ -8,11 +8,16 @@ import DataCollectionModuleDjango.mainPage.models as pg_models
 import DataCollectionModuleDjango.mainPage.forms as pg_forms
 
 
+# Базовый класс, от которого будут наследоваться все остальные генераторы
+# при должно оформлении именно он дает им основной функционал
 class BasePageGenerator(object):
     user = None
     data = None
     files = None
     DirName = "sampleDirname"  # необходимо преопределить
+    renderPath = "sample/path/to/file.html"
+
+    __isValid__ = None
 
     # Массив характеристик каждого формсета. Должен быть переопределен. Данный для примера
     FormsetsAttrsSettings = [
@@ -32,31 +37,29 @@ class BasePageGenerator(object):
         },
     ]
 
-
-class StructPageGenerator(object):
-    user = None
-    data = None
-    files = None
-    DirName = "struct"
-
-    StructFormsetPrefix = "struct"
-    StructFormset = pg_forms.StructForm.get_formset_class(pg_models.Struct, pg_forms.StructForm)
-
-    structFormsetObj = None
-    __isValid__ = None
-
     def __init__(self, user, data=None, files=None):
         self.user = user
         self.files = files
         self.data = data
 
+        for setting in self.FormsetsAttrsSettings:
+            class_name = setting['FormsetClassName']
+            form_link = setting['FormsetForm']
+            model_link = setting['FormsetModel']
+            setattr(self, class_name, form_link.get_formset_class(model_link, form_link))
+
     def get_rendered_html(self) -> str:
-        if self.structFormsetObj is None:
-            return "<b>Ошибка генерации файла: formset - null</b>"
         if not self.validate_formsets():
             return "<b>Ошибка генерации файла: ошибка при валидации форм</b>"
 
-        return render_to_string("pageGenerator/struct.html", context={"structOrgUprav_formset": self.structFormsetObj})
+        context = {}
+        for setting in self.FormsetsAttrsSettings:
+            obj_name = setting['FormsetObjectName']
+            context[obj_name] = getattr(self, obj_name, None)
+            if context[obj_name] is None:
+                return "Ошибка генерации файла: один из формсетов - None"
+
+        return render_to_string(self.renderPath, context=context)
 
     def save_html(self, encoding='utf-8'):
         html = self.get_rendered_html()  # получаем html
@@ -70,41 +73,113 @@ class StructPageGenerator(object):
             destination.write(html.encode(encoding))
 
     def get_user_formsets(self, rewrite=True):
-        struct_formset_obj = pg_forms.StructForm.get_owned_formset(self.user, pg_models.Struct, pg_forms.StructForm,
-                                                                   prefix=self.StructFormsetPrefix)
-        if rewrite:
-            self.structFormsetObj = struct_formset_obj
-            self.__isValid__ = None
+        formsets = []
+        for setting in self.FormsetsAttrsSettings:
+            obj_name = setting['FormsetObjectName']  # Получаем свойства
+            form_link = setting['FormsetForm']
+            model_link = setting['FormsetModel']
+            prefix = setting['prefix']
+            # создаем формсеты и добавляем их в лист
+            formset_obj = form_link.get_owned_formset(self.user, model_link, form_link, prefix=prefix)
+            formsets.append(formset_obj)
+            if rewrite:
+                setattr(self, obj_name, formset_obj)
+                self.__isValid__ = None
 
-        return self.structFormsetObj
+        return tuple(formsets)
 
     def get_formsets_from_data(self, rewrite=True):
-        struct_formset_obj = self.StructFormset(data=self.data, files=self.files, prefix=self.StructFormsetPrefix)
+        formsets = []
+        for setting in self.FormsetsAttrsSettings:
+            class_name = setting['FormsetClassName']
+            obj_name = setting['FormsetObjectName']  # Получаем свойства
+            prefix = setting['prefix']
+            # получаем экземпляр класса, создаем объект и вкидываем его в лист
+            formset_class = getattr(self, class_name)
+            formset_obj = formset_class(data=self.data, files=self.files, prefix=prefix)
+            formsets.append(formset_obj)
+            if rewrite:
+                setattr(self, obj_name, formset_obj)
+                self.__isValid__ = None
 
-        if rewrite:
-            self.structFormsetObj = struct_formset_obj
-            self.__isValid__ = None
-
-        return self.structFormsetObj
+        return tuple(formsets)
 
     def validate_formsets(self) -> bool:
         if self.__isValid__ is not None:
             return self.__isValid__
         self.__isValid__ = True
-        self.__isValid__ = self.__isValid__ and self.structFormsetObj.is_valid()
+
+        for setting in self.FormsetsAttrsSettings:
+            obj_name = setting['FormsetObjectName']
+            formset_object = getattr(self, obj_name)
+            self.__isValid__ = self.__isValid__ and formset_object.is_valid()
+
         return self.__isValid__
 
     def save_formsets(self):
         if self.validate_formsets():
-            for form in self.structFormsetObj:
-                form.save(user=self.user)
+            for setting in self.FormsetsAttrsSettings:
+                obj_name = setting['FormsetObjectName']
+                formset_object = getattr(self, obj_name)
+                for form in formset_object:
+                    form.save(user=self.user)
 
 
+class StructPageGenerator(BasePageGenerator):
+    DirName = "struct"
+    renderPath = "pageGenerator/struct.html"
+    FormsetsAttrsSettings = [
+        {
+            'prefix': 'struct',
+            'FormsetClassName': 'StructFormset',
+            'FormsetObjectName': 'structFormsetObj',
+            'FormsetModel': pg_models.Struct,
+            'FormsetForm': pg_forms.StructForm,
+        }
+    ]
+    StructFormset = None
+    structFormsetObj = None
 
 
-class CommonPageGenerator(object):
-    common_formset: BaseModelFormSet
-    uchred_law_formset: BaseModelFormSet
-    fil_info_formset: BaseModelFormSet
-    rep_info_formset: BaseModelFormSet
-    dir_name = "common"
+class CommonPageGenerator(BasePageGenerator):
+    DirName = "common"
+    renderPath = "pageGenerator/common.html"
+    FormsetsAttrsSettings = [
+        {
+            'prefix': 'common',
+            'FormsetClassName': 'CommonFormset',
+            'FormsetObjectName': 'commonFormsetObj',
+            'FormsetModel': pg_models.Common,
+            'FormsetForm': pg_forms.CommonForm,
+        },
+        {
+            'prefix': 'uchred_law',
+            'FormsetClassName': 'UchredLawFormset',
+            'FormsetObjectName': 'uchredLawFormsetObj',
+            'FormsetModel': pg_models.UchredLaw,
+            'FormsetForm': pg_forms.UchredLawForm,
+        },
+        {
+            'prefix': 'fil_info',
+            'FormsetClassName': 'FilInfoFormset',
+            'FormsetObjectName': 'filInfoFormsetObj',
+            'FormsetModel': pg_models.FilInfo,
+            'FormsetForm': pg_forms.FilInfoForm,
+        },
+        {
+            'prefix': 'rep_info',
+            'FormsetClassName': 'RepInfoFormset',
+            'FormsetObjectName': 'repInfoFormsetObj',
+            'FormsetModel': pg_models.RepInfo,
+            'FormsetForm': pg_forms.RepInfoForm,
+        }
+    ]
+    CommonFormset = None
+    commonFormsetObj = None
+    UchredLawFormset = None
+    uchredLawFormsetObj = None
+    FilInfoFormset = None
+    filInfoFormsetObj = None
+    RepInfoFormset = None
+    repInfoFormsetObj = None
+

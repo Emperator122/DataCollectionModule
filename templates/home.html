@@ -32,13 +32,11 @@
 <br>
 Это тестовая главная страница
 <br>
-{{ arg1 }}
-
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    <div class="accordion" id="accordionExample">
+    <div class="accordion" id="accordionMain">
         <!-- Основные сведения -->
-         <div class="accordion-item">
+        <div class="accordion-item">
             <h2 class="accordion-header" id="headingCommon">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                         data-bs-target="#collapseCommon" aria-expanded="false" aria-controls="collapseCommon">
@@ -46,9 +44,75 @@
                 </button>
             </h2>
             <div id="collapseCommon" class="accordion-collapse collapse" aria-labelledby="headingCommon"
-                 data-bs-parent="#accordionExample">
+                 data-bs-parent="#accordionMain">
                 <div class="accordion-body">
-
+                    <!-- Внутренний аккордеон основных сведений -->
+                    <div class="accordion" id="accordionCommon">
+                        <!-- Основные сведения (внутр) -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingCommonInner">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                        data-bs-target="#collapseCommonInner" aria-expanded="false"
+                                        aria-controls="commonInner">
+                                    Основные сведения
+                                </button>
+                            </h2>
+                            <div id="collapseCommonInner" class="accordion-collapse collapse" aria-labelledby="headingCommonInner"
+                                 data-bs-parent="#accordionCommon">
+                                <div class="accordion-body">
+                                Тестовое тело
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Информация об учредителе (учредителях) образовательной организации -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingUchredLaw">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                        data-bs-target="#collapseUchredLaw" aria-expanded="false"
+                                        aria-controls="uchredLaw">
+                                    Информация об учредителе (учредителях) образовательной организации
+                                </button>
+                            </h2>
+                            <div id="collapseUchredLaw" class="accordion-collapse collapse" aria-labelledby="headingUchredLaw"
+                                 data-bs-parent="#accordionCommon">
+                                <div class="accordion-body">
+                                Тестовое тело
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Информация о филиалах образовательной организации -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingFilInfo">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                        data-bs-target="#collapseFilInfo" aria-expanded="false"
+                                        aria-controls="аilInfo">
+                                    Информация о филиалах образовательной организации
+                                </button>
+                            </h2>
+                            <div id="collapseFilInfo" class="accordion-collapse collapse" aria-labelledby="headingFilInfo"
+                                 data-bs-parent="#accordionCommon">
+                                <div class="accordion-body">
+                                Тестовое тело
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Информация о представительствах образовательной организации -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingRepInfo">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                        data-bs-target="#collapseRepInfo" aria-expanded="false"
+                                        aria-controls="repInfo">
+                                    Информация о представительствах образовательной организации
+                                </button>
+                            </h2>
+                            <div id="collapseRepInfo" class="accordion-collapse collapse" aria-labelledby="headingRepInfo"
+                                 data-bs-parent="#accordionCommon">
+                                <div class="accordion-body">
+                                Тестовое тело
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -62,7 +126,7 @@
                 </button>
             </h2>
             <div id="collapseStruct" class="accordion-collapse collapse" aria-labelledby="headingStruct"
-                 data-bs-parent="#accordionExample">
+                 data-bs-parent="#accordionMain">
                 <div class="accordion-body">
                     <div class="form-group">
                         {{ struct_formset.management_form }}
@@ -97,7 +161,8 @@
                                                 <button group_class="struct-row" class="btn btn-success add-form-row">+
                                                 </button>
                                             {% else %}
-                                                <button group_class="struct-row" class="btn btn-danger remove-form-row">-
+                                                <button group_class="struct-row" class="btn btn-danger remove-form-row">
+                                                    -
                                                 </button>
                                             {% endif %}
                                         </td>
@@ -107,8 +172,10 @@
                             </table>
 
                         </div>
-                    <div><button group_class="struct-row" class="btn btn-success add-form-row">+
-                                                </button></div>
+                        <div>
+                            <button group_class="struct-row" class="btn btn-success add-form-row">+
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -121,7 +188,7 @@
                 </button>
             </h2>
             <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo"
-                 data-bs-parent="#accordionExample">
+                 data-bs-parent="#accordionMain">
                 <div class="accordion-body">
                     <strong>This is the second item's accordion body.</strong> It is hidden by default, until the
                     collapse plugin adds the appropriate classes that we use to style each element. These classes
@@ -183,8 +250,7 @@
                     updateElementIndex(this, prefix, i);
                 });
             }
-        }
-        else {
+        } else {
             cloneMore('.' + group_class + ':last', prefix, group_class)
             deleteForm(prefix, btn, group_class)
         }
