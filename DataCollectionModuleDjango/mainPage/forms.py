@@ -37,7 +37,7 @@ class OwnedModelForm(forms.ModelForm):
         return model_obj
 
     @staticmethod  # вернет формсет из форм
-    def get_formset(model, form):
+    def get_formset_class(model, form):
         return forms.modelformset_factory(model=model, form=form, extra=0, min_num=1)
 
     @staticmethod  # вернет формсет из форм принадлежащих юзеру, либо сет из одной формы
@@ -45,7 +45,7 @@ class OwnedModelForm(forms.ModelForm):
         objects = kwargs.pop('owner', None)
         if objects is None:
             objects = model.objects.filter(owner=user)
-        formset = OwnedModelForm.get_formset(model, form)
+        formset = OwnedModelForm.get_formset_class(model, form)
         return formset(queryset=objects, **kwargs)
 
 
@@ -64,9 +64,8 @@ class StructForm(OwnedModelForm):
             "divisionClauseDocLink": "Положение о структурном подразделении"
         }
 
-    divisionClauseDocLink = MultipleFilesField(label='Положение о структурном подразделении', required=True,
+    divisionClauseDocLink = MultipleFilesField(label='Положение о структурном подразделении', required=False,
                                                widget=ClearableMultipleFilesInput(attrs={
-                                                   "required": "required",
                                                    "multiple": True
                                                }))
 

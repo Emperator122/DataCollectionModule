@@ -12,48 +12,35 @@ def home_page(request):
     if not request.user.is_authenticated:
         return sh.redirect('/login')
 
-    struct_formset_obj = pg_forms.StructForm.get_formset(pg_models.Struct, pg_forms.StructForm)
-    common_formset_obj = pg_forms.CommonForm.get_formset(pg_models.Common, pg_forms.CommonForm)
-    uchred_law_formset_obj = pg_forms.UchredLawForm.get_formset(pg_models.UchredLaw, pg_forms.UchredLawForm)
-    fil_info_formset_obj = pg_forms.FilInfoForm.get_formset(pg_models.FilInfo, pg_forms.FilInfoForm)
-    rep_info_formset_obj = pg_forms.RepInfoForm.get_formset(pg_models.RepInfo, pg_forms.RepInfoForm)
+    common_formset = pg_forms.CommonForm.get_formset_class(pg_models.Common, pg_forms.CommonForm)
+    uchred_law_formset = pg_forms.UchredLawForm.get_formset_class(pg_models.UchredLaw, pg_forms.UchredLawForm)
+    fil_info_formset = pg_forms.FilInfoForm.get_formset_class(pg_models.FilInfo, pg_forms.FilInfoForm)
+    rep_info_formset = pg_forms.RepInfoForm.get_formset_class(pg_models.RepInfo, pg_forms.RepInfoForm)
 
-    # Если на сервер отправил данные авторизованный пользователь
-    if request.method == 'POST' and request.user.is_authenticated:
-        # Очищаем его хранилище
-        fm.clear_user_storage(request.user.username)
+    # В случае POST запроса
+    if request.method == 'POST':
+        # Создаем генератор радела struct
+        struct_page_generator = pg.StructPageGenerator(request.user, request.POST, request.FILES)
+        struct_page_generator.get_formsets_from_data()  # Строим внутри класса экземпляр formset'a исходя из данных
+        if struct_page_generator.validate_formsets():  # Если формсет валиден
 
-        # Генерация раздела структура органов управления
-        struct_formset = struct_formset_obj(prefix="struct", data=request.POST, files=request.FILES)  # Данные с формы
-        if struct_formset.is_valid():
-            # Очищаем старые данные, введенные юзером
-            struct_formset.get_queryset().delete()
-            # Сохраняем каждую форму из набора на серв
-            for f in struct_formset:
-                f.save(user=request.user)
-            # Сохраняем данные
-            pg.StructPageGenerator(struct_formset).save_html(request.user)
+            fm.clear_user_storage(request.user.username)  # Очищаем хранилище пользователя
+            struct_page_generator.structFormsetObj.get_queryset().delete()  # и все старые записи из бд
 
-            return sh.redirect('/')
+            struct_page_generator.save_formsets()  # Сохраняем его в бд + файлы
+            struct_page_generator.save_html()  # И сохраняем index.html
 
-    is_logged_in = request.user.is_authenticated
-    if is_logged_in:
-        user = request.user
-    else:
-        user = None
+        return sh.redirect('/')
 
-    struct_formset = pg_forms.StructForm.get_owned_formset(request.user, pg_models.Struct, pg_forms.StructForm,
-                                                           prefix="struct")
-    common_form = pg_forms.CommonForm.get_owned_formset(request.user, pg_models.Struct, pg_forms.StructForm,
-                                                        prefix="common")
+    # В случае любого другого запроса
+    struct_page_generator = pg.StructPageGenerator(request.user)  # Генератор
+    user_struct_formset_obj = struct_page_generator.get_user_formsets()
 
     return sh.render(request, "home.html", context={
-        "arg1": "Emperator12",
-        "struct_formset": struct_formset,
-        "common_form": common_form,
-        'user': user,
-        'is_logged_in': is_logged_in,
-    })
+            "arg1": "Emperator12",
+            "struct_formset": user_struct_formset_obj,
+            'user': request.user,
+        })
 
 
 def login_page(request):

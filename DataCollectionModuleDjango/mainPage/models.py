@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 
 # Структура и органы упрвавления образовательной организацией
 class Struct(models.Model):
-    name = models.CharField(max_length=100, blank=False, null=False)
+    name = models.CharField(max_length=100, blank=True, null=False)
     fio = models.CharField(max_length=100, blank=True)
     post = models.CharField(max_length=200, blank=True)
     addressStr = models.CharField(max_length=200, blank=True)

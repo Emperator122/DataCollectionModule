@@ -22,7 +22,7 @@
 
 </div>
 <div>
-    {% if not is_logged_in %}
+    {% if not user.is_authenticated %}
         <a href="login">Вход</a>
     {% else %}
         Привет, {{ user.username }} <a href="logout">Выход</a>
@@ -93,7 +93,7 @@
                                         <td class="col-2">{{ form.divisionClauseDocLink|add_class:"form-control" }}</td>
                                         <!--<td class="col-2">{{ form.divisionClauseDocLinkFileNames|add_class:"form-control" }}</td>-->
                                         <td>
-                                            {% if forloop.last %}
+                                            {% if False %}
                                                 <button group_class="struct-row" class="btn btn-success add-form-row">+
                                                 </button>
                                             {% else %}
@@ -105,7 +105,10 @@
                                 {% endfor %}
                                 </tbody>
                             </table>
+
                         </div>
+                    <div><button group_class="struct-row" class="btn btn-success add-form-row">+
+                                                </button></div>
                     </div>
                 </div>
             </div>
@@ -180,6 +183,10 @@
                     updateElementIndex(this, prefix, i);
                 });
             }
+        }
+        else {
+            cloneMore('.' + group_class + ':last', prefix, group_class)
+            deleteForm(prefix, btn, group_class)
         }
         return false;
     }
