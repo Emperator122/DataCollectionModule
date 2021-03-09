@@ -1,0 +1,138 @@
+{% load widget_tweaks %}
+<!-- Основные сведения -->
+<div class="accordion-item">
+    <h2 class="accordion-header" id="headingCommon">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapseCommon" aria-expanded="false" aria-controls="collapseCommon">
+            Основные сведения
+        </button>
+    </h2>
+    <div id="collapseCommon" class="accordion-collapse collapse" aria-labelledby="headingCommon"
+         data-bs-parent="#accordionMain">
+        <div class="accordion-body">
+            <!-- Внутренний аккордеон основных сведений -->
+            <div class="accordion" id="accordionCommon">
+                <!-- Основные сведения (внутр) -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingCommonInner">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapseCommonInner" aria-expanded="false"
+                                aria-controls="commonInner">
+                            Основные сведения
+                        </button>
+                    </h2>
+                    <div id="collapseCommonInner" class="accordion-collapse collapse"
+                         aria-labelledby="headingCommonInner"
+                         data-bs-parent="#accordionCommon">
+                        <div class="accordion-body">
+                            <div class="form-group">
+                                {% for form in common.common_formset %}
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <label class="form-label"
+                                                   for="{{ form.name.id_for_label }}">{{ form.name.label }}:</label>
+                                            {{ form.name|add_class:'form-control' }}
+                                        </div>
+                                    </div>
+                                    <br>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <label class="form-label"
+                                                   for="{{ form.regDate.id_for_label }}">{{ form.regDate.label }}:</label>
+                                            {{ form.regDate }}
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label"
+                                                   for="{{ form.address.id_for_label }}">{{ form.address.label }}:</label>
+                                            {{ form.address|add_class:'form-control' }}
+                                        </div>
+                                    </div>
+                                    <br>
+                                    <div class="row">
+                                        <div class="col">
+                                            <label class="form-label"
+                                                   for="{{ form.workTime.id_for_label }}">{{ form.workTime.label }}:</label>
+                                            {{ form.workTime|add_class:'form-control' }}
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-4">
+                                            <label class="form-label"
+                                                   for="{{ form.telephone.id_for_label }}">{{ form.telephone.label }}:</label>
+                                            {{ form.telephone|add_class:'form-control' }}
+                                        </div>
+                                        <div class="col-4">
+                                            <label class="form-label"
+                                                   for="{{ form.fax.id_for_label }}">{{ form.fax.label }}:</label>
+                                            {{ form.fax|add_class:'form-control' }}
+                                        </div>
+                                        <div class="col-4">
+                                            <label class="form-label"
+                                                   for="{{ form.email.telephone }}">{{ form.email.label }}:</label>
+                                            {{ form.email|add_class:'form-control' }}
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">
+                                            <label class="form-label"
+                                                   for="{{ form.additionalInformation.id_for_label }}">{{ form.additionalInformation.label }}:</label>
+                                            {{ form.additionalInformation|add_class:'form-control' }}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Информация об учредителе (учредителях) образовательной организации -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingUchredLaw">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapseUchredLaw" aria-expanded="false"
+                                aria-controls="uchredLaw">
+                            Информация об учредителе (учредителях) образовательной организации
+                        </button>
+                    </h2>
+                    <div id="collapseUchredLaw" class="accordion-collapse collapse" aria-labelledby="headingUchredLaw"
+                         data-bs-parent="#accordionCommon">
+                        <div class="accordion-body">
+                            Тестовое тело
+                        </div>
+                    </div>
+                </div>
+                <!-- Информация о филиалах образовательной организации -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingFilInfo">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapseFilInfo" aria-expanded="false"
+                                aria-controls="аilInfo">
+                            Информация о филиалах образовательной организации
+                        </button>
+                    </h2>
+                    <div id="collapseFilInfo" class="accordion-collapse collapse" aria-labelledby="headingFilInfo"
+                         data-bs-parent="#accordionCommon">
+                        <div class="accordion-body">
+                            Тестовое тело
+                        </div>
+                    </div>
+                </div>
+                <!-- Информация о представительствах образовательной организации -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingRepInfo">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapseRepInfo" aria-expanded="false"
+                                aria-controls="repInfo">
+                            Информация о представительствах образовательной организации
+                        </button>
+                    </h2>
+                    <div id="collapseRepInfo" class="accordion-collapse collapse" aria-labelledby="headingRepInfo"
+                         data-bs-parent="#accordionCommon">
+                        <div class="accordion-body">
+                            Тестовое тело
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

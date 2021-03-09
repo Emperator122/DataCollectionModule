@@ -1,0 +1,64 @@
+{% load widget_tweaks %}
+<!-- Структура и ораганы образовательной организации -->
+<div class="accordion-item">
+    <h2 class="accordion-header" id="headingStruct">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapseStruct" aria-expanded="false" aria-controls="collapseStruct">
+            Структура и органы управления образовательной организации
+        </button>
+    </h2>
+    <div id="collapseStruct" class="accordion-collapse collapse" aria-labelledby="headingStruct"
+         data-bs-parent="#accordionMain">
+        <div class="accordion-body">
+            <div class="form-group">
+                {{ struct_formset.management_form }}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="thead-light">
+                        <tr>
+                            <th scope="col" class="align-middle">{{ struct_formset.form.name.label }}</th>
+                            <th scope="col" class="align-middle">{{ struct_formset.form.fio.label }}</th>
+                            <th scope="col" class="align-middle">{{ struct_formset.form.post.label }}</th>
+                            <th scope="col" class="align-middle">{{ struct_formset.form.addressStr.label }}</th>
+                            <th scope="col" class="align-middle">{{ struct_formset.form.site.label }}</th>
+                            <th scope="col" class="align-middle">{{ struct_formset.form.email.label }}</th>
+                            <th scope="col"
+                                class="align-middle">{{ struct_formset.form.divisionClauseDocLink.label }}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for form in struct_formset %}
+                            {{ form.id }}
+                            <tr class="struct-row">
+                                <td>{{ form.name|add_class:"form-control" }}</td>
+                                <td>{{ form.fio|add_class:"form-control" }}</td>
+                                <td>{{ form.post|add_class:"form-control" }}</td>
+                                <td>{{ form.addressStr|add_class:"form-control" }}</td>
+                                <td class="col-1">{{ form.site|add_class:"form-control" }}</td>
+                                <td class="col-1">{{ form.email|add_class:"form-control" }}</td>
+                                <td class="col-2">{{ form.divisionClauseDocLink|add_class:"form-control" }}</td>
+                                <!--<td class="col-2">{{ form.divisionClauseDocLinkFileNames|add_class:"form-control" }}</td>-->
+                                <td>
+                                    {% if False %}
+                                        <button group_class="struct-row" class="btn btn-success add-form-row">+
+                                        </button>
+                                    {% else %}
+                                        <button group_class="struct-row" class="btn btn-danger remove-form-row">
+                                            -
+                                        </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+
+                </div>
+                <div>
+                    <button group_class="struct-row" class="btn btn-success add-form-row">+
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

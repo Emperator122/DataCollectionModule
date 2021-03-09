@@ -87,7 +87,8 @@ class CommonForm(OwnedModelForm):
         }
         widgets = {
             "workTime": forms.Textarea(),
-            "additionalInformation": forms.Textarea()
+            "additionalInformation": forms.Textarea(),
+            "regDate": forms.DateInput(attrs={'class': 'form-control', "type": "date"}, format='%d.%m.%Y')
         }
 
 
