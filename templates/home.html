@@ -79,7 +79,10 @@
         newElement.find(':input:not([type=button]):not([type=submit]):not([type=reset]):not(button)').each(function () {
             let name = $(this).attr('name').replace('-' + (total - 1) + '-', '-' + total + '-');
             let id = 'id_' + name;
-            $(this).attr({'name': name, 'id': id}).val('').removeAttr('checked');
+            if($(this).attr('type') === 'checkbox')
+                $(this).attr({'name': name, 'id': id}).removeAttr('checked');
+            else
+                $(this).attr({'name': name, 'id': id}).val('').removeAttr('checked');
         });
         newElement.find('label').each(function () {
             let forValue = $(this).attr('for');
@@ -119,14 +122,16 @@
 
     $(document).on('click', '.add-form-row', function (e) {
         e.preventDefault();
-        let group_class = $(e.target).attr('group_class')
-        cloneMore('.' + group_class + ':last', 'struct', group_class);
+        let group_class = $(e.target).attr('group_class');
+        let prefix = $(e.target).attr('prefix');
+        cloneMore('.' + group_class + ':last', prefix, group_class);
         return false;
     });
     $(document).on('click', '.remove-form-row', function (e) {
         e.preventDefault();
-        let group_class = $(e.target).attr('group_class')
-        deleteForm('struct', $(this), group_class);
+        let group_class = $(e.target).attr('group_class');
+        let prefix = $(e.target).attr('prefix');
+        deleteForm(prefix, $(this), group_class);
         return false;
     });
 </script>

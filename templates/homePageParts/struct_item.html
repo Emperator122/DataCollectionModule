@@ -39,14 +39,9 @@
                                 <td class="col-2">{{ form.divisionClauseDocLink|add_class:"form-control" }}</td>
                                 <!--<td class="col-2">{{ form.divisionClauseDocLinkFileNames|add_class:"form-control" }}</td>-->
                                 <td>
-                                    {% if False %}
-                                        <button group_class="struct-row" class="btn btn-success add-form-row">+
-                                        </button>
-                                    {% else %}
-                                        <button group_class="struct-row" class="btn btn-danger remove-form-row">
+                                    <button prefix="struct" group_class="struct-row" class="btn btn-danger remove-form-row">
                                             -
                                         </button>
-                                    {% endif %}
                                 </td>
                             </tr>
                         {% endfor %}
@@ -55,7 +50,7 @@
 
                 </div>
                 <div>
-                    <button group_class="struct-row" class="btn btn-success add-form-row">+
+                    <button prefix="struct" group_class="struct-row" class="btn btn-success add-form-row">+
                     </button>
                 </div>
             </div>

@@ -12,20 +12,26 @@ def home_page(request):
     if not request.user.is_authenticated:
         return sh.redirect('/login')
 
-
     # В случае POST запроса
     if request.method == 'POST':
+        # Очищаем хранилище пользователя
+        fm.clear_user_storage(request.user.username)
+
         # Создаем генератор радела struct
         struct_page_generator = pg.StructPageGenerator(request.user, request.POST, request.FILES)
         struct_page_generator.get_formsets_from_data()  # Строим внутри класса экземпляр formset'a исходя из данных
         if struct_page_generator.validate_formsets():  # Если формсет валиден
-
-            fm.clear_user_storage(request.user.username)  # Очищаем хранилище пользователя
-            struct_page_generator.structFormsetObj.get_queryset().delete()  # и все старые записи из бд
-
+            struct_page_generator.delete_db_data()  # и все старые записи из бд
             struct_page_generator.save_formsets()  # Сохраняем его в бд + файлы
             struct_page_generator.save_html()  # И сохраняем index.html
 
+        # Генератор раздела common (работает по аналогии со struct)
+        common_page_generator = pg.CommonPageGenerator(request.user, request.POST, request.FILES)
+        common_page_generator.get_formsets_from_data()
+        if common_page_generator.validate_formsets():
+            common_page_generator.delete_db_data()
+            common_page_generator.save_formsets()
+            common_page_generator.save_html()
         return sh.redirect('/')
 
     # В случае любого другого запроса

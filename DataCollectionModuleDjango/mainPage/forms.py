@@ -88,7 +88,7 @@ class CommonForm(OwnedModelForm):
         widgets = {
             "workTime": forms.Textarea(),
             "additionalInformation": forms.Textarea(),
-            "regDate": forms.DateInput(attrs={'class': 'form-control', "type": "date"}, format='%d.%m.%Y')
+            "regDate": forms.DateInput(attrs={'class': 'form-control', "type": "date"}, format='%Y-%m-%d')
         }
 
 
@@ -99,7 +99,7 @@ class UchredLawForm(OwnedModelForm):
         exclude = ['owner']
         labels = {
             "nameUchred": "Наименование учредителя",
-            "fullnameUchred": "ФИО руководителя учредителя (учредителя)",
+            "fullnameUchred": "ФИО руководителя (учредителя)",
             "addressUchred": "Юридический адрес",
             "telUchred": "Контактные телефоны",
             "mailUchred": "Адрес электронной почты",

@@ -63,13 +63,13 @@ class BasePageGenerator(object):
 
     def save_html(self, encoding='utf-8'):
         html = self.get_rendered_html()  # получаем html
-        fs = FileSystemStorage(os.path.join("fileStore/", self.user.username))  # создаем необходимую папку
+        fs = FileSystemStorage(os.path.join("fileStore/", self.user.username))  # заходим в хранилище пользователя
         path_to_dir = os.path.join(fs.location, self.DirName)
 
         if not os.path.exists(path_to_dir):
-            os.mkdir(os.path.join(fs.location, self.DirName))
+            os.mkdir(os.path.join(fs.location, self.DirName))  # создаем папку для index.html
 
-        with fs.open(os.path.join(path_to_dir, "index.html"), 'wb') as destination:  # сохраняем файл
+        with fs.open(os.path.join(path_to_dir, "index.html"), 'wb') as destination:  # сохраняем файл index.html
             destination.write(html.encode(encoding))
 
     def get_user_formsets(self, rewrite=True):
@@ -123,6 +123,16 @@ class BasePageGenerator(object):
                 formset_object = getattr(self, obj_name)
                 for form in formset_object:
                     form.save(user=self.user)
+
+    def delete_db_data(self):
+        result = False
+        if self.data is not None and self.validate_formsets():
+            result = True
+            for setting in self.FormsetsAttrsSettings:
+                obj_name = setting['FormsetObjectName']
+                formset_object = getattr(self, obj_name)
+                formset_object.get_queryset().delete()
+        return result
 
 
 class StructPageGenerator(BasePageGenerator):
@@ -182,4 +192,3 @@ class CommonPageGenerator(BasePageGenerator):
     filInfoFormsetObj = None
     RepInfoFormset = None
     repInfoFormsetObj = None
-
